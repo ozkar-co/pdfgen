@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pdfgen</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="brand">
+        <h1>pdfgen</h1>
+        <p class="tag">Markdown o HTML → PDF · plantillas con membrete</p>
+      </header>
+
+      <section class="panel">
+        <label id="drop" class="drop" for="file">
+          <input id="file" type="file" accept=".md,.markdown,.html,.htm,.txt" hidden />
+          <span>Arrastra o elige un .md / .html, o pega el contenido abajo</span>
+          <span id="file-name" class="file-name"></span>
+        </label>
+
+        <textarea id="content" rows="12" placeholder="# Título&#10;&#10;Contenido…"></textarea>
+
+        <div class="row">
+          <label class="field">Formato
+            <select id="format">
+              <option value="md">Markdown</option>
+              <option value="html">HTML</option>
+            </select>
+          </label>
+          <label class="field">Plantilla
+            <select id="template">
+              <option value="">Sin plantilla</option>
+            </select>
+          </label>
+          <label class="field grow">Título
+            <input id="title" type="text" placeholder="opcional" />
+          </label>
+        </div>
+
+        <div class="row">
+          <button id="generate-btn" type="button" class="btn primary">Generar PDF</button>
+          <a id="download" class="btn hidden" download="documento.pdf">Descargar</a>
+        </div>
+
+        <p id="status" class="status">Lista</p>
+        <iframe id="preview" class="preview hidden" title="Vista previa"></iframe>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

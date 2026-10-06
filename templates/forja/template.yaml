@@ -1,0 +1,4 @@
+name: Forja de Código
+description: Hoja carta con logos, márgenes y pie de Forja.
+page: "size: letter; margin: 22mm 19mm 36mm 19mm;"
+membrete: membrete.pdf
