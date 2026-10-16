@@ -9,15 +9,23 @@ Familia de herramientas no-IA (`30xx`). Spec:
 ## Deploy (Debian)
 
 ```bash
-sudo apt install -y python3-venv fonts-dejavu libpango-1.0-0 libpangoft2-1.0-0
+sudo apt install -y python3-venv fonts-dejavu libpango-1.0-0 libpangoft2-1.0-0 \
+  nodejs npm libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+  libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2
 
 cd ~/Code
 git clone git@github.com:ozkar-co/pdfgen.git
 cd pdfgen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+sudo npm install -g @mermaid-js/mermaid-cli   # mmdc + Chromium (puppeteer)
 ./run.sh                    # prueba: 0.0.0.0:3009, Ctrl+C para salir
 ```
+
+Mermaid usa `mmdc` (Node + Chromium headless) para renderizar los
+bloques ```` ```mermaid ```` a SVG. Si `mmdc` no está en el `PATH`
+del servicio, fija la ruta en `config.yaml` (`mermaid_cmd`) o vía
+`MERMAID_CMD`. Sin Mermaid en el documento, `mmdc` no se invoca.
 
 Servicio (`/etc/systemd/system/pdfgen.service`):
 

@@ -3,3 +3,5 @@ host: 0.0.0.0
 port: 3009
 max_input_kb: 2048
 templates_dir: templates
+mermaid_cmd: mmdc
+mermaid_timeout: 30

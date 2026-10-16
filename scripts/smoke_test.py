@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import sys
-import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -64,19 +63,18 @@ def main() -> int:
         path = OUT / f"smoke-{template or 'plain'}.pdf"
         path.write_bytes(data)
         print(f"ok {template or 'plain'}: {len(data)} bytes → {path}")
-    try:
-        req = urllib.request.Request(
-            BASE + "/api/pdf",
-            data=json.dumps(
-                {"content": "```mermaid\ngraph TD\n```", "format": "md"}
-            ).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=10)
-        print("FALLO: mermaid debió rechazarse", file=sys.stderr)
+    mermaid = "```mermaid\nflowchart LR\n  A[uno] --> B[dos]\n```\n"
+    req = urllib.request.Request(
+        BASE + "/api/pdf",
+        data=json.dumps({"content": mermaid, "format": "md"}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=60) as res:
+        data = res.read()
+    if not data.startswith(b"%PDF"):
+        print("FALLO mermaid: no es PDF", file=sys.stderr)
         return 1
-    except urllib.error.HTTPError as exc:
-        print(f"ok mermaid rechazado: {exc.code}")
+    print(f"ok mermaid: {len(data)} bytes")
     return 0
 
 

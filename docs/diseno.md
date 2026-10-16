@@ -42,8 +42,8 @@ fallbacks.
 | `title` | Metadato del PDF; si falta, `title` del frontmatter |
 | `filename` | Nombre sugerido en `Content-Disposition` |
 
-Errores de contenido (Mermaid, HTML sin `<head>`) → 422 con el
-motivo.
+Errores de contenido (Mermaid inválido, HTML sin `<head>`) → 422
+con el motivo.
 
 ## Render `[PDF-RENDER]`
 
@@ -59,7 +59,13 @@ motivo.
   de tabla se repite en cada página.
 - **Recursos:** solo `data:` URIs. Imágenes remotas o locales se
   ignoran (el servicio es público y no hace peticiones de red).
-- **Mermaid:** no soportado; un bloque `mermaid` devuelve 422.
+- **Mermaid:** soportado. Un bloque ```` ```mermaid ```` en
+  Markdown (o un `<pre|div|code class="mermaid">` en HTML) se
+  renderiza a SVG con `mermaid-cli` (`mmdc`) y se incrusta como
+  `data:` URI. Config de render: tema `neutral`, `htmlLabels`
+  apagado (texto nativo, WeasyPrint no dibuja `foreignObject`) y
+  `useMaxWidth` apagado (ancho en px, el CSS lo escala).
+  Diagrama inválido o `mmdc` ausente → 422.
 
 ## Plantillas `[PDF-TPL]`
 
@@ -85,6 +91,11 @@ el servicio.
 ## Config `[PDF-CFG]`
 
 `config.yaml`: `host`, `port` (3009), `max_input_kb`,
-`templates_dir`. Env: `PORT`, `MAX_INPUT_KB`.
+`templates_dir`, `mermaid_cmd` (ruta a `mmdc`, por defecto `mmdc`),
+`mermaid_timeout` (s). Env: `PORT`, `MAX_INPUT_KB`, `MERMAID_CMD`,
+`MERMAID_TIMEOUT`.
+
+Mermaid requiere Node + Chromium (vía `mermaid-cli`). Si un
+documento no usa Mermaid, `mmdc` no se invoca.
 
 Sin autenticación (como el resto de la familia en OzNet).

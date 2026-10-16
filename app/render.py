@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import html as html_lib
 import io
 import re
@@ -9,10 +10,19 @@ import yaml
 from pypdf import PdfReader, PdfWriter
 from weasyprint import HTML, default_url_fetcher
 
+from .mermaid import MermaidError, render_svg
 from .templates import PAGE_PLAIN, Template
 
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.DOTALL)
-MERMAID_RE = re.compile(r"^\s{0,3}```mermaid\b", re.MULTILINE)
+MERMAID_FENCE_RE = re.compile(
+    r"^[ \t]{0,3}```mermaid[ \t]*\r?\n(.*?)^[ \t]{0,3}```[ \t]*$",
+    re.DOTALL | re.MULTILINE,
+)
+MERMAID_HTML_RE = re.compile(
+    r"<(?P<tag>pre|div|code)\b(?=[^>]*\bclass=[\"'][^\"']*\bmermaid\b)[^>]*>"
+    r"(?P<body>.*?)</(?P=tag)>",
+    re.IGNORECASE | re.DOTALL,
+)
 HTML_DOC_RE = re.compile(r"<html[\s>]", re.IGNORECASE)
 HEAD_OPEN_RE = re.compile(r"<head[^>]*>", re.IGNORECASE)
 KEEP_BLOCK_RE = re.compile(
@@ -62,6 +72,13 @@ th, td {
 }
 th { background: rgba(0, 0, 0, 0.06); }
 img { max-width: 100%; height: auto; break-inside: avoid; }
+.mermaid-figure {
+  margin: 0.6em 0 1em;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.mermaid-figure img { max-width: 100%; height: auto; }
 blockquote { margin: 0.6em 0; padding-left: 0.8em; border-left: 3px solid #bbb; }
 hr { border: 0; border-top: 1px solid #bbb; margin: 1em 0; }
 .keep { break-inside: avoid; page-break-inside: avoid; }
@@ -84,6 +101,31 @@ def _strip_frontmatter(text: str) -> tuple[dict, str]:
         return {}, text
     meta = yaml.safe_load(m.group(1)) or {}
     return (meta if isinstance(meta, dict) else {}), text[m.end():]
+
+
+def _mermaid_img(code: str) -> str:
+    try:
+        svg = render_svg(code)
+    except MermaidError as exc:
+        raise RenderError(f"Mermaid: {exc}") from exc
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return (
+        '<figure class="mermaid-figure">'
+        f'<img src="data:image/svg+xml;base64,{b64}" alt="diagrama Mermaid" />'
+        "</figure>"
+    )
+
+
+def _replace_markdown_mermaid(body: str) -> str:
+    return MERMAID_FENCE_RE.sub(
+        lambda m: f"\n\n{_mermaid_img(m.group(1))}\n\n", body
+    )
+
+
+def _replace_html_mermaid(fragment: str) -> str:
+    return MERMAID_HTML_RE.sub(
+        lambda m: _mermaid_img(html_lib.unescape(m.group("body"))), fragment
+    )
 
 
 def _keep_blocks_together(fragment: str) -> str:
@@ -112,13 +154,13 @@ def build_html(
 ) -> str:
     if fmt == "md":
         meta, body = _strip_frontmatter(content)
-        if MERMAID_RE.search(body):
-            raise RenderError("Mermaid no está soportado: renderiza el diagrama como imagen")
+        body = _replace_markdown_mermaid(body)
         fragment = markdown.markdown(body, extensions=["tables", "fenced_code"])
         doc_title = title or str(meta.get("title") or "Documento")
         return _wrap(_keep_blocks_together(fragment), doc_title, template)
 
     if fmt == "html":
+        content = _replace_html_mermaid(content)
         if not HTML_DOC_RE.search(content):
             return _wrap(_keep_blocks_together(content), title or "Documento", template)
         # Documento completo: nuestro CSS va primero; el del documento manda.

@@ -40,6 +40,8 @@ class Settings:
     port: int
     max_input_kb: int
     templates_dir: Path
+    mermaid_cmd: str
+    mermaid_timeout: int
 
 
 def load_settings() -> Settings:
@@ -65,6 +67,13 @@ def load_settings() -> Settings:
             "MAX_INPUT_KB", os.getenv("MAX_INPUT_KB") or raw["max_input_kb"]
         ),
         templates_dir=templates_dir,
+        mermaid_cmd=str(
+            os.getenv("MERMAID_CMD") or raw.get("mermaid_cmd") or "mmdc"
+        ),
+        mermaid_timeout=_positive_int(
+            "MERMAID_TIMEOUT",
+            os.getenv("MERMAID_TIMEOUT") or raw.get("mermaid_timeout") or 30,
+        ),
     )
 
 
