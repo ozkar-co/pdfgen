@@ -18,7 +18,7 @@ git clone git@github.com:ozkar-co/pdfgen.git
 cd pdfgen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-sudo npm install -g @mermaid-js/mermaid-cli   # mmdc + Chromium (puppeteer)
+npm install -g @mermaid-js/mermaid-cli   # mmdc + Chromium (puppeteer)
 ./run.sh                    # prueba: 0.0.0.0:3009, Ctrl+C para salir
 ```
 
